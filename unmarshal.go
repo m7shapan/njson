@@ -40,7 +40,7 @@ func Unmarshal(data []byte, v interface{}) (err error) {
 
 		var value interface{}
 		if isStructureType(field.Kind().String()) {
-			value = parseStructureType(result, field)
+			value = parseStructureType(result, field.Type())
 		} else {
 			// set field value depend on it's data type
 			value = parseDataType(result, field.Kind().String())
@@ -54,11 +54,11 @@ func Unmarshal(data []byte, v interface{}) (err error) {
 	return nil
 }
 
-func unmarshalSlice(results []gjson.Result, field reflect.Value) interface{} {
-	newSlice := reflect.MakeSlice(reflect.TypeOf(field.Interface()), 0, 0)
+func unmarshalSlice(results []gjson.Result, field reflect.Type) interface{} {
+	newSlice := reflect.MakeSlice(field, 0, 0)
 
 	for i := 0; i < len(results); i++ {
-		v := parseDataType(results[i], field.Type().Elem().String())
+		v := parseDataType(results[i], field.Elem().String())
 		if v != nil {
 			newSlice = reflect.Append(newSlice, reflect.ValueOf(v))
 		}
@@ -67,8 +67,8 @@ func unmarshalSlice(results []gjson.Result, field reflect.Value) interface{} {
 	return newSlice.Interface()
 }
 
-func unmarshalMap(raw string, field reflect.Value) interface{} {
-	m := reflect.New(reflect.MapOf(field.Type().Key(), field.Type().Elem())).Interface()
+func unmarshalMap(raw string, field reflect.Type) interface{} {
+	m := reflect.New(reflect.MapOf(field.Key(), field.Elem())).Interface()
 
 	err := json.Unmarshal([]byte(raw), m)
 	if err != nil {
@@ -78,8 +78,8 @@ func unmarshalMap(raw string, field reflect.Value) interface{} {
 	return reflect.Indirect(reflect.ValueOf(m)).Interface()
 }
 
-func unmarshalStruct(raw string, field reflect.Value) interface{} {
-	v := reflect.New(field.Type()).Interface()
+func unmarshalStruct(raw string, field reflect.Type) interface{} {
+	v := reflect.New(field).Interface()
 
 	err := Unmarshal([]byte(raw), v)
 	if err != nil {

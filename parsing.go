@@ -6,7 +6,7 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-func parseStructureType(result gjson.Result, field reflect.Value) (v interface{}) {
+func parseStructureType(result gjson.Result, field reflect.Type) (v interface{}) {
 	switch field.Kind() {
 	case reflect.Slice:
 		v = unmarshalSlice(result.Array(), field)
@@ -41,6 +41,8 @@ func parseDataType(result gjson.Result, typ string) (v interface{}) {
 		v = float64(result.Float())
 	case reflect.Bool.String():
 		v = result.Bool()
+	case reflect.Struct.String():
+		v = nil
 	default:
 		v = nil
 	}
