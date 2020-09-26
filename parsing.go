@@ -13,7 +13,11 @@ func parseStructureType(result gjson.Result, field reflect.Type) (v interface{})
 	case reflect.Map:
 		v = unmarshalMap(result.Raw, field)
 	case reflect.Struct:
-		v = unmarshalStruct(result.Raw, field)
+		if field.String() == "time.Time" {
+			v = result.Time()
+		} else {
+			v = unmarshalStruct(result.Raw, field)
+		}
 	default:
 		v = nil
 	}
