@@ -59,12 +59,14 @@ func unmarshalSlice(results []gjson.Result, field reflect.Type) interface{} {
 
 	for i := 0; i < len(results); i++ {
 
+		r := results[i]
+		k := reflect.TypeOf(r)
+
 		var value interface{}
-		if isStructureType(field.Kind().String()) {
-			value = parseStructureType(results[i], field.Elem())
+		if isStructureType(k.String()) {
+			value = parseStructureType(r, field.Elem())
 		} else {
-			// set field value depend on it's data type
-			value = parseDataType(results[i], field.Kind().String())
+			value = parseDataType(r, field.Elem().String())
 		}
 
 		if value != nil {
