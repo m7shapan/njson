@@ -12,6 +12,7 @@ const tag string = "njson"
 
 // Unmarshal used to unmarshal nested json using "njson" tag
 func Unmarshal(data []byte, v interface{}) (err error) {
+
 	// catch code panic and return error message
 	defer func() {
 		if r := recover(); r != nil {
