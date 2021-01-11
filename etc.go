@@ -1,6 +1,9 @@
 package njson
 
-import "reflect"
+import (
+	"reflect"
+	"strings"
+)
 
 func validTag(filed reflect.StructField) bool {
 	return !(filed.Tag.Get(tag) == "" ||
@@ -17,6 +20,10 @@ func isStructureType(typ string) (ok bool) {
 		ok = true
 	default:
 		ok = false
+	}
+
+	if strings.Contains(typ, "[]") {
+		ok = true
 	}
 
 	return

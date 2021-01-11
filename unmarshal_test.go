@@ -119,6 +119,91 @@ func TestUnmarshallBasicTypes(t *testing.T) {
 
 }
 
+func TestUnmarshalSlices(t *testing.T) {
+	json := `
+	{
+		"top_slice": ["foo", "bar"],
+		"int_matrix": [
+			[101, 102, 103],
+			[201, 202, 203],
+			[301, 302, 303]
+		],
+		"int_3d_matrix": [
+			[
+				[
+					101, 102, 103
+				],
+				[
+					201, 202, 203
+				],
+				[
+					301, 302, 303
+				]
+			],
+			[
+				[
+					401, 402, 403
+				],
+				[
+					501, 502, 503
+				]
+			],
+			[
+				[
+					601, 602, 603
+				],
+			]
+
+		],
+		"string_matrix": [
+			["string_1", "string_2"],
+			["string_3", "string_4"]
+		],
+		"string_3d_matrix": [
+			[
+				["string_1", "string_2"]
+			],
+			[
+				["string_3", "string_4"]
+			],
+			[
+				["string_5", "string_6"]
+			]
+		]
+	  }
+	`
+
+	type Slices struct {
+		TopSlice       []string       `njson:"top_slice"`
+		IntMatrix      [][]int        `njson:"int_matrix"`
+		Int3DMatrix    [][][]int      `njson:"int_3d_matrix"`
+		StringMatrix   [][]string     `njson:"string_matrix"`
+		String3DMatrix [][][]string   `njson:"string_3d_matrix"`
+		String4DMatrix [][][][]string `njson:"string_4d_matrix"`
+	}
+
+	actual := Slices{}
+
+	err := Unmarshal([]byte(json), &actual)
+	if err != nil {
+		t.Error(err)
+	}
+
+	expected := Slices{
+		TopSlice:       []string{"foo", "bar"},
+		IntMatrix:      [][]int{{101, 102, 103}, {201, 202, 203}, {301, 302, 303}},
+		Int3DMatrix:    [][][]int{{{101, 102, 103}, {201, 202, 203}, {301, 302, 303}}, {{401, 402, 403}, {501, 502, 503}}, {{601, 602, 603}}},
+		StringMatrix:   [][]string{{"string_1", "string_2"}, {"string_3", "string_4"}},
+		String3DMatrix: [][][]string{{{"string_1", "string_2"}}, {{"string_3", "string_4"}}, {{"string_5", "string_6"}}},
+		String4DMatrix: [][][][]string{},
+	}
+
+	diff := cmp.Diff(expected, actual)
+	if diff != "" {
+		t.Error(diff)
+	}
+}
+
 func TestUnmarshalComplex(t *testing.T) {
 
 	json := `
@@ -190,7 +275,7 @@ func TestUnmarshalMoreComplex(t *testing.T) {
 			[101, 102, 103],
 			[201, 202, 203],
 			[301, 302, 303]
-		]
+		],
 		"list_of_structs": [
 		  {"first": "Dale", "last": "Murphy", "age": 44, "nets": ["ig", "fb", "tw"]},
 		  {"first": "Roger", "last": "Craig", "age": 68, "nets": ["fb", "tw"]},
@@ -200,14 +285,14 @@ func TestUnmarshalMoreComplex(t *testing.T) {
 	`
 
 	type MoreComplex struct {
-		FirstChild         string   `njson:"top_struct.child_struct.first_child"`
-		FirstChildOfChild  string   `njson:"top_struct.child_struct.another_child_struct.first_child_of_first_child"`
-		ListInStruct       []int    `njson:"top_struct.a_list"`
-		AChildListInStruct []string `njson:"top_struct.child_struct.a_child_list"`
-		//ListOfLists        [][]int  `njson:"list_of_lists"`
-		ListOfStructs       []string `njson:"list_of_structs"`
-		ListOfNetsInStructs []string `njson:"list_of_structs.#.nets"`
-		// ListOfNetLists      [][]string `njson:"list_of_structs.#.nets.#.*"`
+		FirstChild          string     `njson:"top_struct.child_struct.first_child"`
+		FirstChildOfChild   string     `njson:"top_struct.child_struct.another_child_struct.first_child_of_first_child"`
+		ListInStruct        []int      `njson:"top_struct.a_list"`
+		AChildListInStruct  []string   `njson:"top_struct.child_struct.a_child_list"`
+		ListOfLists         [][]int    `njson:"list_of_lists"`
+		ListOfStructs       []string   `njson:"list_of_structs"`
+		ListOfNetsInStructs []string   `njson:"list_of_structs.#.nets"`
+		ListOfNetLists      [][]string `njson:"list_of_structs.#.nets"`
 	}
 
 	actual := MoreComplex{}
@@ -222,7 +307,7 @@ func TestUnmarshalMoreComplex(t *testing.T) {
 		FirstChildOfChild:  "The first child",
 		ListInStruct:       []int{5, 4, 3, 2, 1},
 		AChildListInStruct: []string{"six", "five", "four"},
-		//ListOfLists:        [][]int{{101, 102, 103}, {201, 202, 203}, {301, 302, 303}},
+		ListOfLists:        [][]int{{101, 102, 103}, {201, 202, 203}, {301, 302, 303}},
 		ListOfStructs: []string{
 			`{"first": "Dale", "last": "Murphy", "age": 44, "nets": ["ig", "fb", "tw"]}`,
 			`{"first": "Roger", "last": "Craig", "age": 68, "nets": ["fb", "tw"]}`,
@@ -233,7 +318,7 @@ func TestUnmarshalMoreComplex(t *testing.T) {
 			`["fb", "tw"]`,
 			`["ig", "tw"]`,
 		},
-		// ListOfNetLists: [][]string{{"ig", "fb", "tw"}, {"fb", "tw"}, {"ig", "tw"}},
+		ListOfNetLists: [][]string{{"ig", "fb", "tw"}, {"fb", "tw"}, {"ig", "tw"}},
 	}
 
 	diff := cmp.Diff(expected, actual)
