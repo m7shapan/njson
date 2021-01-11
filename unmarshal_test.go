@@ -2,6 +2,7 @@ package njson
 
 import (
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 )
@@ -66,7 +67,7 @@ func TestUnmarshallBasicTypes(t *testing.T) {
             {"name": "Asma", "age": 26},
             {"name": "Ahmed", "age": 25},
             {"name": "Mahmoud", "age": 30}
-        ]
+		]
 	}`
 
 	type Types struct {
@@ -116,7 +117,6 @@ func TestUnmarshallBasicTypes(t *testing.T) {
 	if diff != "" {
 		t.Error(diff)
 	}
-
 }
 
 func TestUnmarshalFlattenSlices(t *testing.T) {
@@ -242,18 +242,24 @@ func TestUnmarshalComplex(t *testing.T) {
 		  {"first": "Dale", "last": "Murphy", "age": 44, "nets": ["ig", "fb", "tw"]},
 		  {"first": "Roger", "last": "Craig", "age": 68, "nets": ["fb", "tw"]},
 		  {"first": "Jane", "last": "Murphy", "age": 47, "nets": ["ig", "tw"]}
-		]
+		],
+		"time_1": "2021-01-11T23:56:51.141Z",
+		"time_2": "2021-01-11T23:56:51.141+01:00",
+		"time_3": "2021-01-11T23:56:51.141-01:00",
 	  }
 	`
 
 	type User struct {
-		FirstName              string   `njson:"name.first"`
-		LastName               string   `njson:"name.last"`
-		Age                    int      `njson:"age"`
-		NumberOfChildren       int      `njson:"children.#"`
-		Children               []string `njson:"children"`
-		Friends                []string `njson:"friends.#.last"`
-		NumberOfFriendNetworks []int    `njson:"friends.#.nets.#"`
+		FirstName              string    `njson:"name.first"`
+		LastName               string    `njson:"name.last"`
+		Age                    int       `njson:"age"`
+		NumberOfChildren       int       `njson:"children.#"`
+		Children               []string  `njson:"children"`
+		Friends                []string  `njson:"friends.#.last"`
+		NumberOfFriendNetworks []int     `njson:"friends.#.nets.#"`
+		Time1                  time.Time `njson:"time_1"`
+		Time2                  time.Time `njson:"time_2"`
+		Time3                  time.Time `njson:"time_3"`
 		//FavoriteMovie    string   `njson:"fav.movie"`
 	}
 
@@ -264,6 +270,10 @@ func TestUnmarshalComplex(t *testing.T) {
 		t.Error(err)
 	}
 
+	t1, _ := time.Parse(time.RFC3339, "2021-01-11T23:56:51.141Z")
+	t2, _ := time.Parse(time.RFC3339, "2021-01-11T23:56:51.141+01:00")
+	t3, _ := time.Parse(time.RFC3339, "2021-01-11T23:56:51.141-01:00")
+
 	expected := User{
 		FirstName:              "Tom",
 		LastName:               "Anderson",
@@ -272,6 +282,9 @@ func TestUnmarshalComplex(t *testing.T) {
 		Children:               []string{"Sara", "Alex", "Jack"},
 		Friends:                []string{"Murphy", "Craig", "Murphy"},
 		NumberOfFriendNetworks: []int{3, 2, 2},
+		Time1:                  t1,
+		Time2:                  t2,
+		Time3:                  t3,
 	}
 
 	diff := cmp.Diff(expected, actual)
