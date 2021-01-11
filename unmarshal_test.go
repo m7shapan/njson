@@ -119,6 +119,32 @@ func TestUnmarshallBasicTypes(t *testing.T) {
 
 }
 
+func TestUnmarshalFlattenSlices(t *testing.T) {
+	json := `
+		[1, 2, 3, 4]
+	`
+
+	type Slice struct {
+		Numbers1 []int `njson:"@flatten"`
+	}
+
+	actual := Slice{}
+
+	err := Unmarshal([]byte(json), &actual)
+	if err != nil {
+		t.Error(err)
+	}
+
+	expected := Slice{
+		Numbers1: []int{1, 2, 3, 4},
+	}
+
+	diff := cmp.Diff(expected, actual)
+	if diff != "" {
+		t.Error(diff)
+	}
+}
+
 func TestUnmarshalSlices(t *testing.T) {
 	json := `
 	{
