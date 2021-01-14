@@ -230,6 +230,107 @@ func TestUnmarshalSlices(t *testing.T) {
 	}
 }
 
+func TestUnmarshallMaps(t *testing.T) {
+
+	json := `
+	{
+		"map1": {
+			"key1": "value1",
+			"key2": "value2"
+		},
+		"map2": {
+			"key1": 1,
+			"key2": 2,
+			"key3": 3
+		},
+		"map3": {
+			"key1": {
+				"k1": 1,
+				"k2": 2
+			},
+			"key2": {
+				"k3": 3,
+				"k4": 4
+			}
+		},
+		"map4": {
+			"key1": {
+				"k1": "v1",
+				"k2": "v2"
+			},
+			"key2": {
+				"k1": "v3",
+				"k2": "v4"
+			},
+			"key3": {
+				"k1": "v5",
+				"k2": "v6"
+			}
+		}
+	}
+	`
+
+	type S1 struct {
+		K1 string
+		K2 string
+	}
+
+	type Maps struct {
+		Map1 map[string]string         `njson:"map1"`
+		Map2 map[string]int            `njson:"map2"`
+		Map3 map[string]map[string]int `njson:"map3"`
+		Map4 map[string]*S1            `njson:"map4"`
+	}
+
+	actual := Maps{}
+
+	err := Unmarshal([]byte(json), &actual)
+	if err != nil {
+		t.Error(err)
+	}
+
+	expected := Maps{
+		Map1: map[string]string{
+			"key1": "value1",
+			"key2": "value2",
+		},
+		Map2: map[string]int{
+			"key1": 1,
+			"key2": 2,
+			"key3": 3,
+		},
+		Map3: map[string]map[string]int{
+			"key1": {
+				"k1": 1,
+				"k2": 2,
+			},
+			"key2": {
+				"k3": 3,
+				"k4": 4,
+			},
+		},
+		Map4: map[string]*S1{
+			"key1": {
+				K1: "v1",
+				K2: "v2",
+			},
+			"key2": {
+				K1: "v3",
+				K2: "v4",
+			},
+			"key3": {
+				K1: "v5",
+				K2: "v6",
+			},
+		},
+	}
+
+	diff := cmp.Diff(expected, actual)
+	if diff != "" {
+		t.Error(diff)
+	}
+}
+
 func TestUnmarshalComplex(t *testing.T) {
 
 	json := `
