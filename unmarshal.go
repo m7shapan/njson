@@ -12,6 +12,7 @@ const tag string = "njson"
 
 // Unmarshal used to unmarshal nested json using "njson" tag
 func Unmarshal(data []byte, v interface{}) (err error) {
+
 	// catch code panic and return error message
 	defer func() {
 		if r := recover(); r != nil {
@@ -60,11 +61,11 @@ func unmarshalSlice(results []gjson.Result, field reflect.Type) interface{} {
 	for i := 0; i < len(results); i++ {
 
 		var value interface{}
-		if isStructureType(field.Kind().String()) {
+		if isStructureType(field.Elem().String()) {
 			value = parseStructureType(results[i], field.Elem())
 		} else {
 			// set field value depend on it's data type
-			value = parseDataType(results[i], field.Kind().String())
+			value = parseDataType(results[i], field.Elem().String())
 		}
 
 		if value != nil {
