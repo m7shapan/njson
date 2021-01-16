@@ -76,7 +76,7 @@ A path is a series of keys separated by a dot. A key may contain special wildcar
 ```
 
 ## TODOs
-- [ ] Add test cases 
+- [x] Add test cases 
 - [ ] Improve `map` type Unmarshal/Decode performance
 - [ ] Improve `struct` type Unmarshal/Decode performance
 
