@@ -13,16 +13,21 @@ func TestUnmarshalSmall(t *testing.T) {
         "name": {"first": "Mohamed", "last": "Shapan"},
         "age": 26,
         "friends": [
-            {"name": "Asma", "age": 26},
-            {"name": "Ahmed", "age": 25},
-            {"name": "Mahmoud", "age": 30}
+            {"first": "Asma", "age": 26},
+            {"first": "Ahmed", "age": 25},
+            {"first": "Mahmoud", "age": 30}
         ]
 	}`
 
+	type Name struct {
+		First string `njson:"first"`
+		Last  string `njson:"last"`
+	}
+
 	type User struct {
-		Name    string   `njson:"name.last"`
-		Age     int      `njson:"age"`
-		Friends []string `njson:"friends.#.name"`
+		Name    Name   `njson:"name"`
+		Age     int    `njson:"age"`
+		Friends []Name `njson:"friends"`
 	}
 
 	actual := User{}
@@ -32,10 +37,26 @@ func TestUnmarshalSmall(t *testing.T) {
 		t.Error(err)
 	}
 
+	var friends []Name
+	friends = append(friends, Name{
+		First: "Asma",
+	})
+
+	friends = append(friends, Name{
+		First: "Ahmed",
+	})
+
+	friends = append(friends, Name{
+		First: "Mahmoud",
+	})
+
 	expected := User{
-		Name:    "Shapan",
+		Name: Name{
+			First: "Mohamed",
+			Last:  "Shapan",
+		},
 		Age:     26,
-		Friends: []string{"Asma", "Ahmed", "Mahmoud"},
+		Friends: friends,
 	}
 
 	diff := cmp.Diff(expected, actual)
