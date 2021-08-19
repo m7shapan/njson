@@ -10,6 +10,8 @@ import (
 
 const tag string = "njson"
 
+var jsonNumberType = reflect.TypeOf(json.Number(""))
+
 // Unmarshal used to unmarshal nested json using "njson" tag
 func Unmarshal(data []byte, v interface{}) (err error) {
 
@@ -38,6 +40,12 @@ func Unmarshal(data []byte, v interface{}) (err error) {
 
 		// get field value by tag
 		result := gjson.GetBytes(data, typeOfT.Field(i).Tag.Get(tag))
+
+		// if field type json.Number
+		if v != nil && field.Kind() == reflect.String && field.Type() == jsonNumberType {
+			elem.Field(i).SetString(result.String())
+			continue
+		}
 
 		var value interface{}
 		if isStructureType(field.Kind().String()) {
