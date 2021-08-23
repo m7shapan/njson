@@ -1,6 +1,7 @@
 package njson
 
 import (
+	json2 "encoding/json"
 	"testing"
 	"time"
 
@@ -64,6 +65,67 @@ func TestUnmarshalSmall(t *testing.T) {
 		t.Error(diff)
 	}
 
+}
+
+func TestUnmarshalJsonNumber(t *testing.T) {
+	json := `
+	{
+        "name": {"first": "Mohamed", "last": "Shapan"},
+        "age": 26,
+        "weight": "77",
+        "friends": [
+            {"first": "Asma", "age": 26},
+            {"first": "Ahmed", "age": 25},
+            {"first": "Mahmoud", "age": 30}
+        ]
+	}`
+
+	type Name struct {
+		First string `njson:"first"`
+		Last  string `njson:"last"`
+	}
+
+	type User struct {
+		Name    Name         `njson:"name"`
+		Age     json2.Number `njson:"age"`
+		Weight  json2.Number `njson:"weight"`
+		Friends []Name       `njson:"friends"`
+	}
+
+	actual := User{}
+
+	err := Unmarshal([]byte(json), &actual)
+	if err != nil {
+		t.Error(err)
+	}
+
+	var friends []Name
+	friends = append(friends, Name{
+		First: "Asma",
+	})
+
+	friends = append(friends, Name{
+		First: "Ahmed",
+	})
+
+	friends = append(friends, Name{
+		First: "Mahmoud",
+	})
+
+	expected := User{
+		Name: Name{
+			First: "Mohamed",
+			Last:  "Shapan",
+		},
+		Age:     json2.Number("26"),
+		Weight:  json2.Number("77"),
+		Friends: friends,
+	}
+
+	diff := cmp.Diff(expected, actual)
+	if diff != "" {
+		t.Error(diff)
+	}
 }
 
 func TestUnmarshallBasicTypes(t *testing.T) {
