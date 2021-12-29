@@ -8,6 +8,77 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+func TestUnmarshalInvalidJson(t *testing.T) {
+	json := `
+	BAD JSON %% @
+	##
+	}`
+
+	type Name struct {
+		First string `njson:"first"`
+		Last  string `njson:"last"`
+	}
+
+	type User struct {
+		Name    Name   `njson:"name"`
+		Age     int    `njson:"age"`
+		Friends []Name `njson:"friends"`
+	}
+
+	actual := User{}
+
+	if err := Unmarshal([]byte(json), &actual); err == nil {
+		t.Error("error should not be nil")
+	}
+}
+
+func TestUnmarshalError(t *testing.T) {
+	json := `
+	{
+        "name": {"first": "Mohamed", "last": "Shapan"},
+        "age": 26,
+        "friends": [
+            {"first": "Asma", "age": 26},
+            {"first": "Ahmed", "age": 25},
+            {"first": "Mahmoud", "age": 30}
+        ]
+	}`
+
+	if err := Unmarshal([]byte(json), nil); err == nil {
+		t.Error("error should not be nil")
+	}
+}
+
+func TestUnmarshalByValueError(t *testing.T) {
+	json := `
+	{
+        "name": {"first": "Mohamed", "last": "Shapan"},
+        "age": 26,
+        "friends": [
+            {"first": "Asma", "age": 26},
+            {"first": "Ahmed", "age": 25},
+            {"first": "Mahmoud", "age": 30}
+        ]
+	}`
+
+	type Name struct {
+		First string `njson:"first"`
+		Last  string `njson:"last"`
+	}
+
+	type User struct {
+		Name    Name   `njson:"name"`
+		Age     int    `njson:"age"`
+		Friends []Name `njson:"friends"`
+	}
+
+	actual := User{}
+
+	if err := Unmarshal([]byte(json), actual); err == nil {
+		t.Error("error should not be nil")
+	}
+}
+
 func TestUnmarshalSmall(t *testing.T) {
 	json := `
 	{
@@ -260,7 +331,7 @@ func TestUnmarshalSlices(t *testing.T) {
 			[
 				[
 					601, 602, 603
-				],
+				]
 			]
 
 		],
@@ -429,7 +500,7 @@ func TestUnmarshalComplex(t *testing.T) {
 		],
 		"time_1": "2021-01-11T23:56:51.141Z",
 		"time_2": "2021-01-11T23:56:51.141+01:00",
-		"time_3": "2021-01-11T23:56:51.141-01:00",
+		"time_3": "2021-01-11T23:56:51.141-01:00"
 	  }
 	`
 
