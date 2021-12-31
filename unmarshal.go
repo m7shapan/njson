@@ -19,6 +19,10 @@ var jsonNumberType = reflect.TypeOf(json.Number(""))
 
 // Unmarshal used to unmarshal nested json using "njson" tag
 func Unmarshal(data []byte, v interface{}) (err error) {
+	if !gjson.ValidBytes(data) {
+		return fmt.Errorf("invalid json: %v", string(data))
+	}
+
 	// catch code panic and return error message
 	defer func() {
 		if r := recover(); r != nil {
@@ -33,7 +37,11 @@ func Unmarshal(data []byte, v interface{}) (err error) {
 		}
 	}()
 
-	elem := reflect.ValueOf(v).Elem()
+	rv := reflect.ValueOf(v)
+	if rv.Kind() != reflect.Ptr || rv.IsNil() {
+		return fmt.Errorf("can't unmarshal to invalid type %v", reflect.TypeOf(v))
+	}
+	elem := rv.Elem()
 	typeOfT := elem.Type()
 	for i := 0; i < elem.NumField(); i++ {
 		field := elem.Field(i)
