@@ -3,18 +3,22 @@ package njson
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/tidwall/gjson"
 )
 
-const tag string = "njson"
+const (
+	njsonTag = "njson"
+	jsonTag  = "json"
+)
 
 var jsonNumberType = reflect.TypeOf(json.Number(""))
 
 // Unmarshal used to unmarshal nested json using "njson" tag
 func Unmarshal(data []byte, v interface{}) (err error) {
-
 	// catch code panic and return error message
 	defer func() {
 		if r := recover(); r != nil {
@@ -24,7 +28,7 @@ func Unmarshal(data []byte, v interface{}) (err error) {
 			case error:
 				err = x
 			default:
-				err = errors.New("Unknown panic")
+				err = fmt.Errorf("unknown panic: %v", r)
 			}
 		}
 	}()
@@ -34,12 +38,25 @@ func Unmarshal(data []byte, v interface{}) (err error) {
 	for i := 0; i < elem.NumField(); i++ {
 		field := elem.Field(i)
 
-		if !(validTag(typeOfT.Field(i)) && field.CanSet()) {
+		// Check that the tag is either "json" or "njson", and can be set
+		if (!validTag(typeOfT.Field(i), njsonTag) && !validTag(typeOfT.Field(i), jsonTag)) || !field.CanSet() {
 			continue
 		}
 
+		// Assume "njson" by default, but change to "json" if tag matches
+		fieldName := typeOfT.Field(i).Tag.Get(njsonTag)
+		if validTag(typeOfT.Field(i), jsonTag) {
+			fieldName = typeOfT.Field(i).Tag.Get(jsonTag)
+
+			// Only support true "json" tags:
+			// if a tag is nested, it must use the "njson" tag
+			if len(strings.Split(fieldName, ".")) > 1 {
+				return fmt.Errorf("invalid json tag: %s", fieldName)
+			}
+		}
+
 		// get field value by tag
-		result := gjson.GetBytes(data, typeOfT.Field(i).Tag.Get(tag))
+		result := gjson.GetBytes(data, fieldName)
 
 		// if field type json.Number
 		if v != nil && field.Kind() == reflect.String && field.Type() == jsonNumberType {
@@ -60,7 +77,7 @@ func Unmarshal(data []byte, v interface{}) (err error) {
 		}
 	}
 
-	return nil
+	return
 }
 
 func unmarshalSlice(results []gjson.Result, field reflect.Type) interface{} {
