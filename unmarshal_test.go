@@ -621,3 +621,93 @@ func TestUnmarshalMoreComplex(t *testing.T) {
 	}
 
 }
+
+func TestUnmarshalJson(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		json := `
+		{
+			"name": {"first": "Mohamed", "last": "Shapan"},
+			"age": 26,
+			"friends": [
+				{"first": "Asma", "age": 26},
+				{"first": "Ahmed", "age": 25},
+				{"first": "Mahmoud", "age": 30}
+			]
+		}`
+
+		type Name struct {
+			First string `njson:"first"`
+			Last  string `njson:"last"`
+		}
+
+		type User struct {
+			Name    Name   `njson:"name"`
+			Age     int    `json:"age"`
+			Friends []Name `json:"friends"`
+		}
+
+		actual := User{}
+
+		err := Unmarshal([]byte(json), &actual)
+		if err != nil {
+			t.Error(err)
+		}
+
+		var friends []Name
+		friends = append(friends, Name{
+			First: "Asma",
+		})
+
+		friends = append(friends, Name{
+			First: "Ahmed",
+		})
+
+		friends = append(friends, Name{
+			First: "Mahmoud",
+		})
+
+		expected := User{
+			Name: Name{
+				First: "Mohamed",
+				Last:  "Shapan",
+			},
+			Age:     26,
+			Friends: friends,
+		}
+
+		diff := cmp.Diff(expected, actual)
+		if diff != "" {
+			t.Error(diff)
+		}
+	})
+
+	t.Run("fail", func(t *testing.T) {
+		json := `
+		{
+			"name": {"first": "Mohamed", "last": "Shapan"},
+			"age": 26,
+			"friends": [
+				{"first": "Asma", "age": 26},
+				{"first": "Ahmed", "age": 25},
+				{"first": "Mahmoud", "age": 30}
+			]
+		}`
+
+		type Name struct {
+			First string `njson:"first"`
+			Last  string `njson:"last"`
+		}
+
+		type User struct {
+			Name    string `json:"name.first"`
+			Age     int    `json:"age"`
+			Friends []Name `json:"friends"`
+		}
+
+		actual := User{}
+
+		if err := Unmarshal([]byte(json), &actual); err == nil {
+			t.Error("error should not be nil")
+		}
+	})
+}
