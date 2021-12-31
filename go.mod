@@ -3,7 +3,6 @@ module github.com/m7shapan/njson
 go 1.14
 
 require (
-	github.com/google/go-cmp v0.5.4
-	github.com/tidwall/gjson v1.10.2
-	github.com/tidwall/pretty v1.2.0 // indirect
+	github.com/google/go-cmp v0.5.6
+	github.com/tidwall/gjson v1.12.1
 )
