@@ -77,7 +77,12 @@ func Unmarshal(data []byte, v interface{}) (err error) {
 			value = parseStructureType(result, field.Type())
 		} else {
 			// set field value depend on it's data type
-			value = parseDataType(result, field.Kind().String())
+			value = parseDataType(result, field.Type().String())
+		}
+
+		// maybe it is a custom type, use json.unmarshal
+		if value == nil {
+			value = unmarshalGeneric(result.Raw, field)
 		}
 
 		if v != nil {
@@ -129,4 +134,13 @@ func unmarshalStruct(raw string, field reflect.Type) interface{} {
 	}
 
 	return reflect.Indirect(reflect.ValueOf(v)).Interface()
+}
+
+func unmarshalGeneric(raw string, field reflect.Value) interface{} {
+	err := json.Unmarshal([]byte(raw), field.Addr().Interface())
+	if err != nil {
+		panic(err)
+	}
+
+	return reflect.Indirect(field).Interface()
 }
