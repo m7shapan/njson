@@ -1,12 +1,109 @@
 package njson
 
 import (
+	"encoding/json"
 	json2 "encoding/json"
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
 )
+
+type CustomType string
+type CustomUnmarshalerType string
+
+// Implements Unmarshaler
+func (ct *CustomUnmarshalerType) UnmarshalJSON(data []byte) error {
+	var s string
+	if err := json.Unmarshal(data, &s); err != nil {
+		return err
+	}
+	// add a mark to control it later
+	*ct = CustomUnmarshalerType(fmt.Sprintf("unmarshaler:%s", s))
+	return nil
+}
+
+func TestCustomTypeUnmarshal(t *testing.T) {
+
+	type CustomStruct struct {
+		Normal string     `njson:"inner.nested"`
+		Custom CustomType `njson:"custom"`
+	}
+
+	json := `{"custom": "value", "inner": { "nested": "nestedValue"}}`
+
+	var actual CustomStruct
+
+	if err := Unmarshal([]byte(json), &actual); err != nil {
+		t.Errorf("error should be nil: %v", err)
+	}
+
+	expected := CustomStruct{
+		Normal: "nestedValue",
+		Custom: CustomType("value"),
+	}
+
+	diff := cmp.Diff(expected, actual)
+
+	if diff != "" {
+		t.Errorf(diff)
+	}
+}
+
+func TestCustomTypeUnmarshaler(t *testing.T) {
+
+	type CustomStruct struct {
+		Normal string                `njson:"inner.nested"`
+		Custom CustomUnmarshalerType `njson:"custom"`
+	}
+
+	json := `{"custom": "value", "inner": { "nested": "nestedValue"}}`
+
+	var actual CustomStruct
+
+	if err := Unmarshal([]byte(json), &actual); err != nil {
+		t.Errorf("error should be nil: %v", err)
+	}
+
+	expected := CustomStruct{
+		Normal: "nestedValue",
+		Custom: CustomUnmarshalerType("unmarshaler:value"),
+	}
+
+	diff := cmp.Diff(expected, actual)
+
+	if diff != "" {
+		t.Errorf(diff)
+	}
+}
+
+func TestCustomTypeUnmarshalerNested(t *testing.T) {
+
+	type CustomStruct struct {
+		Normal string                `njson:"inner.nested"`
+		Custom CustomUnmarshalerType `njson:"custom.key.nested"`
+	}
+
+	json := `{"custom": { "key": {"nested": "value"} }, "inner": { "nested": "nestedValue"}}`
+
+	var actual CustomStruct
+
+	if err := Unmarshal([]byte(json), &actual); err != nil {
+		t.Errorf("error should be nil: %v", err)
+	}
+
+	expected := CustomStruct{
+		Normal: "nestedValue",
+		Custom: CustomUnmarshalerType("unmarshaler:value"),
+	}
+
+	diff := cmp.Diff(expected, actual)
+
+	if diff != "" {
+		t.Errorf(diff)
+	}
+}
 
 func TestUnmarshalInvalidJson(t *testing.T) {
 	json := `
